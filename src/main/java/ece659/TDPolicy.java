@@ -11,7 +11,7 @@ import java.util.Random;
  */
 public class TDPolicy implements Policy {
 
-    private final Map<IntQ, Double> q = new HashMap<>();
+    private final Map<IntArray, double[]> q = new HashMap<>();
     private final Random rand = new Random();
 
     private int[] currentState = null;
@@ -20,10 +20,30 @@ public class TDPolicy implements Policy {
 
     private double epsilon = 0.05;
 
-    private double getQ(IntQ intQ) {
-        Double d = q.get(intQ);
+    private int pow(int base, int exponent) {
+        int pow = 1;
+        for (int i = 0; i < exponent; i++) {
+            pow *= base;
+        }
+        return pow;
+    }
+
+    private int getIndex(Action[] actions) {
+        int index = 0;
+        for (Action action : actions) {
+            index *= Action.values().length;
+            index += action.ordinal();
+        }
+        return index;
+    }
+
+    private double[] getQ(IntArray intQ, int numActions) {
+        double[] d = q.get(intQ);
         if (d == null) {
-            d = rand.nextDouble();
+            d = new double[pow(Action.values().length, numActions)];
+            for (int i = 0; i < d.length; i++) {
+                d[i] = rand.nextDouble();
+            }
             q.put(intQ, d);
         }
         return d;
@@ -47,10 +67,9 @@ public class TDPolicy implements Policy {
             actions[i] = possibleActions[i][0];
         }
         while (true) {
-            Action[] actionCopy = Arrays.copyOf(actions, actions.length);
-            double newQ = getQ(new IntQ(state, actionCopy));
+            double newQ = getQ(new IntArray(state), actions.length)[getIndex(actions)];
             if (newQ > bestQ) {
-                bestAction = actionCopy;
+                bestAction =  Arrays.copyOf(actions, actions.length);
                 bestQ = newQ;
             }
             int j;
@@ -80,10 +99,13 @@ public class TDPolicy implements Policy {
         Action[] actions = bestActions(state.getChargerState(), possibleActions);
         double reward = environment.performActions(actions);
 
-        double newQ = getQ(new IntQ(state.getChargerState(), actions));
-        IntQ oldIntQ = new IntQ(currentState, currentActions);
-        double oldQ = getQ(oldIntQ);
-        q.put(oldIntQ, oldQ + 0.05 * (currentReward + 0.99 * newQ - oldQ));
+        if (currentState != null) {
+            double[] newQs = getQ(new IntArray(state.getChargerState()), actions.length);
+            double[] oldQs = getQ(new IntArray(currentState), actions.length);
+            int newIndex = getIndex(actions);
+            int oldIndex = getIndex(currentActions);
+            oldQs[oldIndex] = oldQs[oldIndex] + 0.05 * (currentReward + 0.99 * newQs[newIndex] - oldQs[oldIndex]);
+        }
 
         currentState = state.getChargerState();
         currentActions = actions;
