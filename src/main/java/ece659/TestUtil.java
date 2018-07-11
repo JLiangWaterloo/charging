@@ -13,10 +13,10 @@ public class TestUtil {
     public static Environment randomSingleChargerEnvironment(int seed) {
         Set<Position> occupied = new HashSet<>();
 
-        int width = 100;
-        int height = 100;
+        int width = 200;
+        int height = 200;
 
-        Device[] devices = new Device[100];
+        Device[] devices = new Device[1000];
         Obstacle[] obstacles = new Obstacle[1000];
 
         Random rand = new Random(seed);
@@ -45,15 +45,13 @@ public class TestUtil {
 
     public static void main(String[] args) {
         Environment e = randomSingleChargerEnvironment(0);
-        Policy p = new RandomPolicy();
+        Policy p = new TDPolicy();
 
-        double r = e.getReward();
-        for (int i = 0; i < 1000000; i++) {
-            double newR = p.performActions(e);
-            if (newR > r || i % 1000 == 0) {
-                System.out.println(i + ": " + newR + " > " + r);
+        for (int i = 0; i < 10000000; i++) {
+            double r = p.performActions(e);
+            if (i % 1000 == 0) {
+                System.out.println(i + ": " + r);
             }
-            r = newR;
         }
         System.out.println(e.getReward());
         System.out.println(e.getLiveAverage());

@@ -11,16 +11,16 @@ import java.util.Set;
  * @author jimmy
  */
 public class Environment {
-    
+
     private final int width, height;
     private final Charger[] chargers;
     private final Device[] devices;
     private final Obstacle[] obstacles;
     private final Set<Position> obstaclePositions;
-    
+
     private long live;
     private int timestep;
-    
+
     public Environment(int width, int height, Charger[] chargers, Device[] devices, Obstacle[] obstacles) {
         this.width = width;
         this.height = height;
@@ -32,27 +32,27 @@ public class Environment {
             obstaclePositions.add(new Position(obstacle.getX(), obstacle.getY()));
         }
     }
-    
+
     public int getWidth() {
         return width;
     }
-    
+
     public int getHeight() {
         return height;
     }
-    
+
     public Charger[] getChargers() {
         return chargers;
     }
-    
+
     public Device[] getDevices() {
         return devices;
     }
-    
+
     public Obstacle[] getObstacles() {
         return obstacles;
     }
-    
+
     public State getState() {
         int[] chargerState = new int[chargers.length * 2];
         for (int i = 0; i < chargers.length; i++) {
@@ -65,7 +65,7 @@ public class Environment {
         }
         return new State(chargerState, deviceState);
     }
-    
+
     public Action[][] getPossibleActions() {
         Action[][] possibleActions = new Action[chargers.length][];
         for (int i = 0; i < chargers.length; i++) {
@@ -87,7 +87,7 @@ public class Environment {
         }
         return possibleActions;
     }
-    
+
     private static Position move(Charger charger, Action action) {
         switch (action) {
             case Left:
@@ -98,13 +98,13 @@ public class Environment {
                 return new Position(charger.getX(), charger.getY() + 1);
             case Down:
                 return new Position(charger.getX(), charger.getY() - 1);
-            case Stay:
-                return new Position(charger.getX(), charger.getY());
+//            case Stay:
+//                return new Position(charger.getX(), charger.getY());
             default:
                 throw new IllegalArgumentException();
         }
     }
-    
+
     private boolean checkMove(Position position) {
         if (obstaclePositions.contains(position)) {
             return false;
@@ -117,7 +117,7 @@ public class Environment {
         }
         return true;
     }
-    
+
     public double getReward() {
         double reward = 0;
         for (Device device : devices) {
@@ -126,11 +126,11 @@ public class Environment {
         }
         return reward;
     }
-    
+
     public double getLiveAverage() {
         return BigDecimal.valueOf(live).divide(BigDecimal.valueOf(timestep), 4, RoundingMode.HALF_EVEN).doubleValue();
     }
-    
+
     public double performActions(Action... actions) {
         if (actions.length != chargers.length) {
             throw new IllegalArgumentException();
@@ -144,7 +144,7 @@ public class Environment {
         // Drain
         for (Device device : devices) {
             double battery = device.getBattery();
-            battery -= 0.0001;
+            battery -= 0.00001;
             if (battery < 0) {
                 battery = 0;
             }
@@ -165,13 +165,13 @@ public class Environment {
                 }
             }
         }
-        
+
         for (Device device : devices) {
             if (device.getBattery() > 0) {
                 live++;
             }
         }
-        
+
         timestep++;
         return getReward();
     }

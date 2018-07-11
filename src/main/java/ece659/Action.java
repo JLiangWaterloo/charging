@@ -9,6 +9,5 @@ public enum Action {
     Left,
     Right,
     Up,
-    Down,
-    Stay;
+    Down;
 }

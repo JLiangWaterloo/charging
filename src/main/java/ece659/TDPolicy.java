@@ -18,11 +18,26 @@ public class TDPolicy implements Policy {
     private Action[] currentActions = null;
     private double currentReward = 0;
 
+    private double epsilon = 0.05;
+
     private double getQ(IntQ intQ) {
-        return q.computeIfAbsent(intQ, x -> rand.nextDouble());
+        Double d = q.get(intQ);
+        if (d == null) {
+            d = rand.nextDouble();
+            q.put(intQ, d);
+        }
+        return d;
     }
 
     private Action[] bestActions(int[] state, Action[][] possibleActions) {
+        if (rand.nextDouble() < epsilon) {
+            Action[] actions = new Action[possibleActions.length];
+            for (int i = 0; i < actions.length; i++) {
+                actions[i] = possibleActions[i][rand.nextInt(possibleActions[i].length)];
+            }
+            return actions;
+        }
+
         double bestQ = Double.NEGATIVE_INFINITY;
         Action[] bestAction = null;
 
@@ -32,9 +47,10 @@ public class TDPolicy implements Policy {
             actions[i] = possibleActions[i][0];
         }
         while (true) {
-            double newQ = getQ(new IntQ(state, actions));
+            Action[] actionCopy = Arrays.copyOf(actions, actions.length);
+            double newQ = getQ(new IntQ(state, actionCopy));
             if (newQ > bestQ) {
-                bestAction = Arrays.copyOf(actions, actions.length);
+                bestAction = actionCopy;
                 bestQ = newQ;
             }
             int j;
@@ -67,7 +83,7 @@ public class TDPolicy implements Policy {
         double newQ = getQ(new IntQ(state.getChargerState(), actions));
         IntQ oldIntQ = new IntQ(currentState, currentActions);
         double oldQ = getQ(oldIntQ);
-        q.put(oldIntQ, oldQ + 0.05 * (currentReward + 0.999 * newQ - oldQ));
+        q.put(oldIntQ, oldQ + 0.05 * (currentReward + 0.99 * newQ - oldQ));
 
         currentState = state.getChargerState();
         currentActions = actions;
